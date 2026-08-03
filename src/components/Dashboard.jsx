@@ -83,20 +83,35 @@ export default function Dashboard({ user, onLogout }) {
               </span>
             </div>
 
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition cursor-pointer group">
+            <div onClick={() => navigate('/contratos')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition cursor-pointer group">
               <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-lg flex items-center justify-center font-bold text-xl mb-4 group-hover:bg-amber-600 group-hover:text-white transition">
                 📄
               </div>
               <h4 className="text-lg font-bold text-slate-800 mb-1">
-                Contratos y Pagos
+                Contratos
               </h4>
               <p className="text-sm text-slate-500 mb-4">
-                Gestión de alquileres activos, vencimientos y recibos.
+                Vinculación de contratos, condiciones y vencimientos.
               </p>
               <span className="text-sm font-semibold text-amber-600 group-hover:underline inline-flex items-center gap-1">
                 Administrar &rarr;
               </span>
             </div>
+
+            <div onClick={() => navigate('/pagos')} className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition cursor-pointer group">
+            <div className="w-12 h-12 bg-violet-100 text-violet-600 rounded-lg flex items-center justify-center font-bold text-xl mb-4 group-hover:bg-violet-600 group-hover:text-white transition">
+              💳
+            </div>
+            <h4 className="text-lg font-bold text-slate-800 mb-1">
+              Gestión de Pagos
+            </h4>
+            <p className="text-sm text-slate-500 mb-4">
+              Control de cuotas mensuales, cobros y emision de recibos.
+            </p>
+            <span className="text-sm font-semibold text-violet-600 group-hover:underline inline-flex items-center gap-1">
+              Registrar pagos &rarr;
+            </span>
+          </div>
 
           </div>
         </div>

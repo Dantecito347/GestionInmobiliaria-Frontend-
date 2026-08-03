@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import { authService } from './services/authService';
 import PersonasPage from './pages/PersonasPage';
 import PropiedadesPage from './pages/PropiedadesPage';
+import ContratosPage from './pages/ContratosPage';
+import PagosPage from './pages/PagosPage';
 import Dashboard from './components/Dashboard';
 
 function App() {
@@ -64,6 +66,28 @@ function App() {
           element={
             isAuthenticated ? (
               <PropiedadesPage />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } 
+        />
+
+        <Route 
+          path="/contratos" 
+          element={
+            isAuthenticated ? (
+              <ContratosPage />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          } 
+        />
+
+        <Route 
+          path="/pagos" 
+          element={
+            isAuthenticated ? (
+              <PagosPage />
             ) : (
               <Navigate to="/login" replace />
             )
