@@ -125,74 +125,75 @@ export const PagosPage = () => {
     }
   };
 
-  // Helper para badges de estado
-  const getBadgeClass = (estado) => {
+ const getBadgeClass = (estado) => {
     switch (estado) {
       case 'Pagado':
-        return 'bg-emerald-100 text-emerald-700';
+        return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300';
       case 'Parcial':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300';
       case 'Pendiente':
-        return 'bg-amber-100 text-amber-700';
+        return 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300';
       case 'Atrasado':
       case 'Vencido':
-        return 'bg-rose-100 text-rose-700';
+        return 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300';
       default:
-        return 'bg-slate-100 text-slate-600';
+        return 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300';
     }
   };
 
   if (loading) {
     return (
-      <div className="p-10 text-center text-slate-500 font-medium">
+      <div className="p-10 text-center text-slate-500 dark:text-slate-400 font-medium">
         Cargando registros de pagos...
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-50 min-h-screen p-8 font-sans">
+    <div className="bg-slate-50 dark:bg-slate-900 min-h-screen p-8 font-sans transition-colors duration-200">
       
-      <div className="bg-white rounded-2xl p-7 border border-slate-200 shadow-sm flex justify-between items-center mb-6">
+      {/* Tarjeta Superior Header */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl p-7 border border-slate-200 dark:border-slate-700 shadow-sm flex justify-between items-center mb-6 transition-colors">
         <div>
           <Link 
             to="/dashboard" 
-            className="text-blue-600 hover:text-blue-700 text-sm font-medium inline-block mb-2 transition-colors"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium inline-block mb-2 transition-colors"
           >
             ← Volver al Dashboard
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
             Gestión de Pagos
           </h1>
-          <p className="text-slate-500 text-sm">
+          <p className="text-slate-500 dark:text-slate-400 text-sm">
             Control de cobros de cuotas de alquiler y recibos.
           </p>
         </div>
 
         <button
           onClick={handleOpenCrear}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors"
+          className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors"
         >
           + Registrar Pago
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      {/* Contenedor de Tabla */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden transition-colors">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-100/70 border-b border-slate-200">
-              <th className="px-6 py-4 text-xs font-bold text-slate-600 tracking-wider uppercase">PERIODO / FECHA</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-600 tracking-wider uppercase">INQUILINO / PROPIEDAD</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-600 tracking-wider uppercase">MONTO OBLIGATORIO</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-600 tracking-wider uppercase">MONTO PAGADO</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-600 tracking-wider uppercase">ESTADO</th>
-              <th className="px-6 py-4 text-xs font-bold text-slate-600 tracking-wider uppercase text-right">ACCIONES</th>
+            <tr className="bg-slate-100/70 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
+              <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">PERIODO / FECHA</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">INQUILINO / PROPIEDAD</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">MONTO OBLIGATORIO</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">MONTO PAGADO</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">ESTADO</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase text-right">ACCIONES</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
             {pagos.length === 0 ? (
               <tr>
-                <td colSpan="6" className="p-6 text-center text-slate-500">
+                <td colSpan="6" className="p-6 text-center text-slate-500 dark:text-slate-400">
                   No hay pagos registrados.
                 </td>
               </tr>
@@ -209,24 +210,24 @@ export const PagosPage = () => {
                   .join(' ');
 
                 return (
-                  <tr key={idPago} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={idPago} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors">
                     
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900">
+                    <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">
                       <div>Mes {pago.mesCobertura || '-'}/{pago.anioCobertura || '-'}</div>
-                      <div className="text-xs font-normal text-slate-400">{pago.fechaPago || '-'}</div>
+                      <div className="text-xs font-normal text-slate-400 dark:text-slate-400">{pago.fechaPago || '-'}</div>
                     </td>
 
-                    <td className="px-6 py-4 text-sm text-slate-600">
+                    <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300">
                       {nombreInquilinoCompleto 
                         ? `${nombreInquilinoCompleto} (${pago.direccionPropiedad || 'Propiedad'})` 
                         : `Contrato ID: ${pago.idContrato}`}
                     </td>
 
-                    <td className="px-6 py-4 text-sm text-slate-500 font-medium">
+                    <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 font-medium">
                       ${Number(montoObligatorioVal).toLocaleString('es-AR')}
                     </td>
 
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900">
+                    <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">
                       ${Number(montoPagadoVal).toLocaleString('es-AR')}
                     </td>
 
@@ -239,13 +240,13 @@ export const PagosPage = () => {
                     <td className="px-6 py-4 text-sm text-right">
                       <button
                         onClick={() => handleOpenEditar(pago)}
-                        className="text-blue-600 font-semibold hover:text-blue-800 mr-4 transition-colors"
+                        className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 mr-4 transition-colors"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleEliminar(idPago)}
-                        className="text-red-600 font-semibold hover:text-red-800 transition-colors"
+                        className="text-red-600 dark:text-red-400 font-semibold hover:text-red-800 dark:hover:text-red-300 transition-colors"
                       >
                         Eliminar
                       </button>
@@ -260,16 +261,16 @@ export const PagosPage = () => {
 
       {/* Modal Crear/Editar Pago */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
             
-            <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h2 className="text-lg font-bold text-slate-900">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-700/30">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                 {editingPago ? 'Editar Pago' : 'Registrar Nuevo Pago'}
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="text-slate-400 hover:text-slate-600 font-semibold text-lg"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold text-lg"
               >
                 ✕
               </button>
@@ -279,7 +280,7 @@ export const PagosPage = () => {
               
               {/* SELECT CONTRATO */}
               <div>
-                <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                   Contrato Asociado
                 </label>
                 <select
@@ -287,16 +288,16 @@ export const PagosPage = () => {
                   required
                   value={formData.idContrato}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Seleccionar Contrato...</option>
+                  <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Seleccionar Contrato...</option>
                   {contratos.map((c) => {
                     const id = c.idContrato || c.id;
                     const desc = c.direccionPropiedad || c.nombreInquilino 
                       ? `${c.nombreInquilino || 'Inquilino'} - ${c.direccionPropiedad || 'Propiedad'}`
                       : `Contrato #${id}`;
                     return (
-                      <option key={id} value={id}>
+                      <option key={id} value={id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                         {desc}
                       </option>
                     );
@@ -307,7 +308,7 @@ export const PagosPage = () => {
               {/* MES Y AÑO COBERTURA */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                     Mes Cobertura
                   </label>
                   <input
@@ -318,12 +319,12 @@ export const PagosPage = () => {
                     required
                     value={formData.mesCobertura}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                     Año Cobertura
                   </label>
                   <input
@@ -332,7 +333,7 @@ export const PagosPage = () => {
                     required
                     value={formData.anioCobertura}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -340,7 +341,7 @@ export const PagosPage = () => {
               {/* MONTOS */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                     Monto Obligatorio ($)
                   </label>
                   <input
@@ -351,12 +352,12 @@ export const PagosPage = () => {
                     value={formData.montoObligatorio}
                     onChange={handleChange}
                     placeholder="Ej: 50000"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                     Monto Pagado ($)
                   </label>
                   <input
@@ -367,7 +368,7 @@ export const PagosPage = () => {
                     value={formData.montoPagado}
                     onChange={handleChange}
                     placeholder="Ej: 50000"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -375,7 +376,7 @@ export const PagosPage = () => {
               {/* FECHA Y ESTADO */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                     Fecha de Pago
                   </label>
                   <input
@@ -384,40 +385,40 @@ export const PagosPage = () => {
                     required
                     value={formData.fechaPago}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-600 uppercase mb-1">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
                     Estado de Pago
                   </label>
                   <select
                     name="estadoPago"
                     value={formData.estadoPago}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="Pagado">Pagado</option>
-                    <option value="Parcial">Parcial</option>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Atrasado">Atrasado</option>
+                    <option value="Pagado" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Pagado</option>
+                    <option value="Parcial" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Parcial</option>
+                    <option value="Pendiente" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Pendiente</option>
+                    <option value="Atrasado" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Atrasado</option>
                   </select>
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end space-x-3 border-t border-slate-100 mt-6">
+              <div className="pt-4 flex justify-end space-x-3 border-t border-slate-100 dark:border-slate-700 mt-6">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 border border-slate-300 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors disabled:opacity-50"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors disabled:opacity-50"
                 >
                   {submitting ? 'Guardando...' : editingPago ? 'Guardar Cambios' : 'Registrar Pago'}
                 </button>
