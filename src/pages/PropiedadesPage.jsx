@@ -2,6 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { propiedadService, tipoInmuebleService, zonaService } from '../services/propiedadService';
 import { personaService } from '../services/personaService';
+import Swal from 'sweetalert2';
+import { toast } from 'sonner';
+import { 
+  Building2, 
+  Plus, 
+  ArrowLeft, 
+  Pencil, 
+  Trash2, 
+  X,
+  Home
+} from 'lucide-react';
 
 export default function PropiedadesPage() {
   const navigate = useNavigate();
@@ -34,6 +45,7 @@ export default function PropiedadesPage() {
       setPropiedades(data);
     } catch (err) {
       console.error("Error al cargar propiedades:", err);
+      toast.error("No se pudieron cargar las propiedades");
     }
   };
 
@@ -50,6 +62,7 @@ export default function PropiedadesPage() {
       setZonas(zonasData);
     } catch (err) {
       console.error("Error al cargar combos auxiliares:", err);
+      toast.error("Error al cargar los datos del formulario");
     }
   };
 
@@ -58,19 +71,14 @@ export default function PropiedadesPage() {
       setEditingId(propiedad.idPropiedad);
       setFormData({
         direccion: propiedad.direccion || '',
-        idPropietario: propiedad.idPropietario || (propietarios[0]?.idPersona || ''),
-        idTipo: propiedad.idTipo || (tiposInmueble[0]?.idTipo || ''),
-        idZona: propiedad.idZona || (zonas[0]?.idZona || ''),
+        idPropietario: propiedad.idPropietario || '',
+        idTipo: propiedad.idTipo || '',
+        idZona: propiedad.idZona || '',
         estado: propiedad.estado || 'Disponible'
       });
     } else {
       setEditingId(null);
-      setFormData({
-        ...initialFormState,
-        idPropietario: propietarios[0]?.idPersona || '',
-        idTipo: tiposInmueble[0]?.idTipo || '',
-        idZona: zonas[0]?.idZona || ''
-      });
+      setFormData(initialFormState);
     }
     setModalOpen(true);
   };
@@ -89,6 +97,11 @@ export default function PropiedadesPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!formData.idPropietario || !formData.idTipo || !formData.idZona) {
+      toast.error('Por favor seleccioná todos los campos requeridos');
+      return;
+    }
+
     const payload = {
       direccion: formData.direccion,
       idPropietario: Number(formData.idPropietario),
@@ -100,46 +113,73 @@ export default function PropiedadesPage() {
     try {
       if (editingId) {
         await propiedadService.update(editingId, payload);
+        toast.success('Propiedad actualizada correctamente');
       } else {
         await propiedadService.create(payload);
+        toast.success('Propiedad registrada con éxito');
       }
       cargarPropiedades();
       handleCloseModal();
     } catch (err) {
-      alert("Hubo un error al guardar la propiedad");
-      console.error(err);
+      console.error("Error al guardar propiedad:", err);
+      const msg = err.response?.data?.error || err.response?.data?.message || "Hubo un error al guardar la propiedad";
+      toast.error(msg);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar esta propiedad?')) {
+    const result = await Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esta acción eliminará la propiedad de la base de datos.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      customClass: {
+        popup: 'rounded-2xl dark:bg-slate-800 dark:text-white',
+        title: 'text-lg font-bold text-slate-800 dark:text-white',
+        htmlContainer: 'text-sm text-slate-500 dark:text-slate-400',
+      }
+    });
+
+    if (result.isConfirmed) {
       try {
         await propiedadService.delete(id);
+        toast.success('Propiedad eliminada correctamente');
         cargarPropiedades();
       } catch (err) {
-        alert("Hubo un error al eliminar la propiedad");
         console.error("Error al eliminar propiedad:", err);
+        const mensajeError = err.response?.data?.error 
+          || err.response?.data?.message 
+          || 'No se puede eliminar la propiedad porque tiene contratos o alquileres vinculados.';
+
+        toast.error(mensajeError, { duration: 5000 });
       }
     }
   };
 
-const renderBadge = (estado) => {
+  const renderBadge = (estado) => {
     switch (estado?.toLowerCase()) {
       case 'disponible':
         return (
-          <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 text-xs font-semibold px-3 py-1 rounded-full">
+          <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/50 text-xs font-semibold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             Disponible
           </span>
         );
       case 'ocupada':
         return (
-          <span className="bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 text-xs font-semibold px-3 py-1 rounded-full">
+          <span className="bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 text-xs font-semibold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
             Ocupada
           </span>
         );
       case 'reservada':
         return (
-          <span className="bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 text-xs font-semibold px-3 py-1 rounded-full">
+          <span className="bg-sky-100 dark:bg-sky-900/40 text-sky-800 dark:text-sky-300 border border-sky-200 dark:border-sky-800/50 text-xs font-semibold px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
             Reservada
           </span>
         );
@@ -156,29 +196,32 @@ const renderBadge = (estado) => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 font-sans transition-colors duration-200">
       <div className="max-w-6xl mx-auto space-y-6">
         
-        {/* Header */}
-        <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
           <div>
             <button 
               onClick={() => navigate('/dashboard')}
-              className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium mb-1 inline-block cursor-pointer"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium mb-2 inline-flex items-center gap-1 cursor-pointer"
             >
-              &larr; Volver al Dashboard
+              <ArrowLeft className="w-4 h-4" /> Volver al Dashboard
             </button>
-            <h1 className="text-2xl font-bold text-slate-800 dark:text-white">Gestión de Propiedades</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Administración de inmuebles, estado y asignación de propietarios.</p>
+            <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <Building2 className="w-7 h-7 text-blue-600 dark:text-blue-400" />
+              Gestión de Propiedades
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              Administración de inmuebles, estado y asignación de propietarios.
+            </p>
           </div>
 
           <button
             onClick={() => handleOpenModal()}
-            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm cursor-pointer"
+            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm cursor-pointer flex items-center gap-2"
           >
-            + Nueva Propiedad
+            <Plus className="w-4 h-4" /> Nueva Propiedad
           </button>
         </div>
 
-        {/* Tabla */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden transition-colors">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-x-auto transition-colors">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 font-semibold">
@@ -188,13 +231,14 @@ const renderBadge = (estado) => {
                 <th className="px-6 py-4">Tipo Inmueble</th>
                 <th className="px-6 py-4">Zona</th>
                 <th className="px-6 py-4">Estado</th>
-                <th className="px-6 py-4">Acciones</th>
+                <th className="px-6 py-4 text-right">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50 text-sm">
               {propiedades.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-8 text-slate-400 dark:text-slate-500">
+                  <td colSpan="7" className="text-center py-12 text-slate-400 dark:text-slate-500">
+                    <Home className="w-10 h-10 mx-auto mb-2 opacity-50" />
                     No hay propiedades registradas
                   </td>
                 </tr>
@@ -217,18 +261,19 @@ const renderBadge = (estado) => {
                     </td>
                     
                     <td className="px-6 py-4">{renderBadge(p.estado)}</td>
-                    <td className="px-6 py-4">
+                    
+                    <td className="px-6 py-4 text-right space-x-2">
                       <button
                         onClick={() => handleOpenModal(p)}
-                        className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium px-3 py-1 rounded-md text-xs transition cursor-pointer"
+                        className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium px-3 py-1.5 rounded-md text-xs transition cursor-pointer inline-flex items-center gap-1"
                       >
-                        Editar
+                        <Pencil className="w-3.5 h-3.5" /> Editar
                       </button>
                       <button
                         onClick={() => handleDelete(p.idPropiedad)}
-                        className="border border-red-300 dark:border-red-800/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 font-medium px-3 py-1 rounded-md text-xs transition cursor-pointer"
+                        className="border border-red-300 dark:border-red-800/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 font-medium px-3 py-1.5 rounded-md text-xs transition cursor-pointer inline-flex items-center gap-1"
                       >
-                        Eliminar
+                        <Trash2 className="w-3.5 h-3.5" /> Eliminar
                       </button>
                     </td>
                   </tr>
@@ -240,17 +285,26 @@ const renderBadge = (estado) => {
 
       </div>
 
-      {/* Modal */}
       {modalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700 space-y-4 animate-in fade-in zoom-in duration-200">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-5">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700 space-y-4 animate-in fade-in zoom-in duration-200 relative">
+            
+            <button 
+              onClick={handleCloseModal}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white pr-6">
               {editingId ? 'Editar Propiedad' : 'Nueva Propiedad'}
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Dirección</label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                  Dirección
+                </label>
                 <input
                   type="text"
                   name="direccion"
@@ -264,7 +318,9 @@ const renderBadge = (estado) => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Propietario</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                    Propietario
+                  </label>
                   <select
                     name="idPropietario"
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
@@ -272,9 +328,9 @@ const renderBadge = (estado) => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Seleccione...</option>
+                    <option value="">Seleccione...</option>
                     {propietarios.map(p => (
-                      <option key={p.idPersona} value={p.idPersona} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                      <option key={p.idPersona} value={p.idPersona}>
                         {p.nombre} {p.apellido}
                       </option>
                     ))}
@@ -282,7 +338,9 @@ const renderBadge = (estado) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Tipo de Inmueble</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                    Tipo de Inmueble
+                  </label>
                   <select
                     name="idTipo"
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
@@ -290,9 +348,9 @@ const renderBadge = (estado) => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Seleccione...</option>
+                    <option value="">Seleccione...</option>
                     {tiposInmueble.map(t => (
-                      <option key={t.idTipo} value={t.idTipo} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                      <option key={t.idTipo} value={t.idTipo}>
                         {t.descripcion}
                       </option>
                     ))}
@@ -302,7 +360,9 @@ const renderBadge = (estado) => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Zona</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                    Zona
+                  </label>
                   <select
                     name="idZona"
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
@@ -310,9 +370,9 @@ const renderBadge = (estado) => {
                     onChange={handleChange}
                     required
                   >
-                    <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Seleccione...</option>
+                    <option value="">Seleccione...</option>
                     {zonas.map(z => (
-                      <option key={z.idZona} value={z.idZona} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                      <option key={z.idZona} value={z.idZona}>
                         {z.zona}{z.nombreBarrio ? ` - ${z.nombreBarrio}` : ''}
                       </option>
                     ))}
@@ -320,16 +380,18 @@ const renderBadge = (estado) => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">Estado</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                    Estado
+                  </label>
                   <select
                     name="estado"
                     className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                     value={formData.estado}
                     onChange={handleChange}
                   >
-                    <option value="Disponible" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Disponible</option>
-                    <option value="Ocupada" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Ocupada</option>
-                    <option value="Reservada" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Reservada</option>
+                    <option value="Disponible">Disponible</option>
+                    <option value="Ocupada">Ocupada</option>
+                    <option value="Reservada">Reservada</option>
                   </select>
                 </div>
               </div>

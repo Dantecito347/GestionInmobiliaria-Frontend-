@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import Login from './pages/Login';
 import { authService } from './services/authService';
 import PersonasPage from './pages/PersonasPage';
@@ -27,6 +28,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Toaster position="top-right" richColors closeButton />
       <Routes>
         <Route 
           path="/login" 
