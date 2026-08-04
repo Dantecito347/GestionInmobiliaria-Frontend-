@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { authService } from '../services/authService';
+import Swal from 'sweetalert2';
+import { toast } from 'sonner';
 
 export default function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
@@ -19,9 +21,9 @@ export default function Login({ onLoginSuccess }) {
     } catch (err) {
       setLoading(false);
       if (err.response && err.response.status === 401) {
-        setError('Credenciales inválidas. Verifique usuario y contraseña.');
+        toast.error('Credenciales inválidas. Verifique usuario y contraseña.');
       } else {
-        setError('Error al conectar con el servidor backend.');
+        toast.error('Error al conectar con el servidor backend.');
       }
     }
   };

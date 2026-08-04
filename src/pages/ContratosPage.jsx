@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { contratoService } from '../services/contratoService';
 import { personaService } from '../services/personaService';
 import { propiedadService } from '../services/propiedadService';
+import Swal from 'sweetalert2';
+import { toast } from 'sonner';
 import { 
   ArrowLeft, 
   Plus, 
@@ -30,7 +32,7 @@ export const ContratosPage = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+const [modalOpen, setModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContrato, setEditingContrato] = useState(null);
   const [formData, setFormData] = useState(initialFormState);
@@ -53,8 +55,7 @@ export const ContratosPage = () => {
       setPersonas(dataPersonas);
       setPropiedades(dataPropiedades);
     } catch (err) {
-      console.error("Error al cargar datos:", err);
-      setError("No se pudieron cargar los datos.");
+      toast.error('No se pudieron cargar los datos');
     } finally {
       setLoading(false);
     }
@@ -154,8 +155,8 @@ export const ContratosPage = () => {
       await cargarDatos();
       handleCloseModal();
     } catch (err) {
-      console.error("Error al guardar el contrato:", err);
-      alert("Error al guardar el contrato.");
+      toast.error("Error al guardar el contrato:", err);
+      toast.error("Error al guardar el contrato.");
     } finally {
       setSubmitting(false);
     }
@@ -168,8 +169,8 @@ export const ContratosPage = () => {
       await contratoService.delete(id);
       setContratos((prev) => prev.filter((c) => c.idContrato !== id));
     } catch (err) {
-      console.error("Error al eliminar contrato:", err);
-      alert("Hubo un error al intentar eliminar el contrato.");
+    toast.error("Error al eliminar contrato:", err);
+      toast.info("Hubo un error al intentar eliminar el contrato.");
     }
   };
 
