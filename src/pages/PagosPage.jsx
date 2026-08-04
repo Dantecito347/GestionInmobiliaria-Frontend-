@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { pagoService } from '../services/pagoService';
 import { contratoService } from '../services/contratoService';
+import Swal from 'sweetalert2';
+import { toast } from 'sonner';
 
 const fechaActual = new Date();
 
@@ -41,7 +43,7 @@ export const PagosPage = () => {
       setPagos(dataPagos);
       setContratos(dataContratos);
     } catch (err) {
-      console.error("Error al cargar pagos/contratos:", err);
+      toast.error("Error al cargar pagos/contratos:", err);
       setError("No se pudieron cargar los registros de pagos.");
     } finally {
       setLoading(false);
@@ -106,7 +108,7 @@ export const PagosPage = () => {
       await cargarDatos();
       handleCloseModal();
     } catch (err) {
-      console.error("Error al guardar el pago:", err);
+      toast.error("Error al guardar el pago:", err);
       alert("Error al guardar el pago.");
     } finally {
       setSubmitting(false);
@@ -120,7 +122,7 @@ export const PagosPage = () => {
       await pagoService.delete(id);
       setPagos((prev) => prev.filter((p) => (p.idPago || p.id) !== id));
     } catch (err) {
-      console.error("Error al eliminar pago:", err);
+      toast.error("Error al eliminar pago:", err);
       alert("Error al intentar eliminar el pago.");
     }
   };
