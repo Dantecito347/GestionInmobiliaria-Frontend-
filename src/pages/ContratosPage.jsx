@@ -5,13 +5,14 @@ import { personaService } from '../services/personaService';
 import { propiedadService } from '../services/propiedadService';
 
 const initialFormState = {
-  idInquilino: '',
   idPropiedad: '',
+  idInquilino: '',
   fechaInicio: '',
   fechaFin: '',
   valorInicial: '',
   idAjuste: '1',
-  estado: 'Activo'
+  estado: 'Activo',
+  obligaciones: []
 };
 
 export const ContratosPage = () => {
@@ -58,7 +59,7 @@ export const ContratosPage = () => {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditar = (contrato) => {
+ const handleOpenEditar = (contrato) => {
     setEditingContrato(contrato);
     setFormData({
       idInquilino: contrato.idInquilino || '',
@@ -67,7 +68,13 @@ export const ContratosPage = () => {
       fechaFin: contrato.fechaFin || '',
       valorInicial: contrato.valorInicial || '',
       idAjuste: contrato.idAjuste || '1',
-      estado: contrato.estado || 'Activo'
+      estado: contrato.estado || 'Activo',
+      obligaciones: contrato.obligaciones ? contrato.obligaciones.map(o => ({
+        idObligacion: o.idObligacion || o.id_obligacion || '',
+        descripcion: o.descripcion || '',
+        importeReferencia: o.importeReferencia !== undefined ? o.importeReferencia : (o.importe_referencia || ''),
+        pagadoPorInquilino: o.pagadoPorInquilino !== undefined ? o.pagadoPorInquilino : (o.pagado_por_inquilino !== undefined ? Boolean(o.pagado_por_inquilino) : true)
+      })) : []
     });
     setIsModalOpen(true);
   };
@@ -86,6 +93,32 @@ export const ContratosPage = () => {
     }));
   };
 
+  const handleAddObligacion = () => {
+    setFormData((prev) => ({
+      ...prev,
+      obligaciones: [
+        ...prev.obligaciones,
+        { descripcion: '', importeReferencia: '', pagadoPorInquilino: true }
+      ]
+    }));
+  };
+
+  const handleRemoveObligacion = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      obligaciones: prev.obligaciones.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleObligacionChange = (index, field, value) => {
+    const newObligaciones = [...formData.obligaciones];
+    newObligaciones[index][field] = value;
+    setFormData((prev) => ({
+      ...prev,
+      obligaciones: newObligaciones
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -95,7 +128,13 @@ export const ContratosPage = () => {
       idInquilino: Number(formData.idInquilino),
       idPropiedad: Number(formData.idPropiedad),
       valorInicial: Number(formData.valorInicial),
-      idAjuste: Number(formData.idAjuste)
+      idAjuste: Number(formData.idAjuste),
+      obligaciones: formData.obligaciones.map(ob => ({
+        ...(ob.idObligacion && { idObligacion: Number(ob.idObligacion) }),
+        descripcion: ob.descripcion,
+        importeReferencia: Number(ob.importeReferencia),
+        pagadoPorInquilino: Boolean(ob.pagadoPorInquilino)
+      }))
     };
 
     try {
@@ -127,7 +166,7 @@ export const ContratosPage = () => {
     }
   };
 
-const getBadgeClass = (estado) => {
+  const getBadgeClass = (estado) => {
     switch (estado) {
       case 'Activo':
         return 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300';
@@ -170,7 +209,7 @@ const getBadgeClass = (estado) => {
 
         <button
           onClick={handleOpenCrear}
-          className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors"
+          className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold px-5 py-3 rounded-xl text-sm shadow-sm transition-colors cursor-pointer"
         >
           + Nuevo Contrato
         </button>
@@ -184,6 +223,7 @@ const getBadgeClass = (estado) => {
               <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">INQUILINO</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">PROPIEDAD</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">VALOR INICIAL</th>
+              <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">OBLIGACIONES / EXTRAS</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase">ESTADO</th>
               <th className="px-6 py-4 text-xs font-bold text-slate-600 dark:text-slate-300 tracking-wider uppercase text-right">ACCIONES</th>
             </tr>
@@ -191,7 +231,7 @@ const getBadgeClass = (estado) => {
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
             {contratos.length === 0 ? (
               <tr>
-                <td colSpan="5" className="p-6 text-center text-slate-500 dark:text-slate-400">
+                <td colSpan="6" className="p-6 text-center text-slate-500 dark:text-slate-400">
                   No hay contratos registrados.
                 </td>
               </tr>
@@ -207,8 +247,36 @@ const getBadgeClass = (estado) => {
                     {contrato.direccionPropiedad || `Propiedad ID: ${contrato.idPropiedad}`}
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300 font-medium">
-                    ${contrato.valorInicial ? contrato.valorInicial.toLocaleString('es-AR') : '0'}
+                    ${contrato.valorInicial ? Number(contrato.valorInicial).toLocaleString('es-AR') : '0'}
                   </td>
+                  
+                  {/* Columna Obligaciones */}
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1 max-w-xs">
+                      {contrato.obligaciones && contrato.obligaciones.length > 0 ? (
+                        contrato.obligaciones.map((ob, idx) => {
+                          const pagaInquilino = ob.pagadoPorInquilino !== undefined ? ob.pagadoPorInquilino : ob.pagado_por_inquilino;
+                          const monto = ob.importeReferencia !== undefined ? ob.importeReferencia : ob.importe_referencia;
+                          return (
+                            <span
+                              key={idx}
+                              className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
+                                pagaInquilino
+                                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+                                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600'
+                              }`}
+                              title={pagaInquilino ? 'Paga Inquilino' : 'Paga Propietario'}
+                            >
+                              {ob.descripcion}: ${Number(monto || 0).toLocaleString('es-AR')}
+                            </span>
+                          );
+                        })
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">Sin extras</span>
+                      )}
+                    </div>
+                  </td>
+
                   <td className="px-6 py-4 text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getBadgeClass(contrato.estado)}`}>
                       {contrato.estado || 'Activo'}
@@ -217,13 +285,13 @@ const getBadgeClass = (estado) => {
                   <td className="px-6 py-4 text-sm text-right">
                     <button
                       onClick={() => handleOpenEditar(contrato)}
-                      className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 mr-4 transition-colors"
+                      className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 mr-4 transition-colors cursor-pointer"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => handleEliminar(contrato.idContrato)}
-                      className="text-red-600 dark:text-red-400 font-semibold hover:text-red-800 dark:hover:text-red-300 transition-colors"
+                      className="text-red-600 dark:text-red-400 font-semibold hover:text-red-800 dark:hover:text-red-300 transition-colors cursor-pointer"
                     >
                       Eliminar
                     </button>
@@ -238,15 +306,15 @@ const getBadgeClass = (estado) => {
       {/* Modal Crear/Editar */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
             
-            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-700/30">
+            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center bg-slate-50/50 dark:bg-slate-700/30 sticky top-0 z-10">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">
                 {editingContrato ? 'Editar Contrato' : 'Nuevo Contrato'}
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold text-lg"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold text-lg cursor-pointer"
               >
                 ✕
               </button>
@@ -372,19 +440,87 @@ const getBadgeClass = (estado) => {
                 </div>
               </div>
 
+              {/* SECCIÓN OBLIGACIONES / IMPUESTOS */}
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex justify-between items-center mb-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase">
+                      Obligaciones / Impuestos
+                    </label>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Gastos extras asociados (Expensas, Impuestos, etc.)</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddObligacion}
+                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                  >
+                    + Agregar Gasto Extra
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {formData.obligaciones.length === 0 ? (
+                    <div className="text-center py-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 text-xs text-slate-400">
+                      Sin obligaciones o impuestos agregados.
+                    </div>
+                  ) : (
+                    formData.obligaciones.map((ob, idx) => (
+                      <div key={idx} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <input
+                          type="text"
+                          placeholder="Ej: Expensas, Impuestos"
+                          className="flex-1 px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          value={ob.descripcion}
+                          onChange={(e) => handleObligacionChange(idx, 'descripcion', e.target.value)}
+                          required
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="Monto Ref."
+                          className="w-28 px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          value={ob.importeReferencia}
+                          onChange={(e) => handleObligacionChange(idx, 'importeReferencia', e.target.value)}
+                          required
+                        />
+                        
+                        <label className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300 cursor-pointer select-none px-1">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(ob.pagadoPorInquilino)}
+                            onChange={(e) => handleObligacionChange(idx, 'pagadoPorInquilino', e.target.checked)}
+                            className="rounded text-blue-600 focus:ring-blue-500 h-4 w-4"
+                          />
+                          Paga Inquilino
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveObligacion(idx)}
+                          className="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-base font-bold px-1.5 cursor-pointer"
+                          title="Eliminar"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
               {/* Botones del Modal */}
               <div className="pt-4 flex justify-end space-x-3 border-t border-slate-100 dark:border-slate-700 mt-6">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  className="px-4 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors disabled:opacity-50"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   {submitting ? 'Guardando...' : editingContrato ? 'Guardar Cambios' : 'Crear Contrato'}
                 </button>

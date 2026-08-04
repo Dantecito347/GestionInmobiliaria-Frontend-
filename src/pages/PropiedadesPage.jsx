@@ -111,6 +111,18 @@ export default function PropiedadesPage() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta propiedad?')) {
+      try {
+        await propiedadService.delete(id);
+        cargarPropiedades();
+      } catch (err) {
+        alert("Hubo un error al eliminar la propiedad");
+        console.error("Error al eliminar propiedad:", err);
+      }
+    }
+  };
+
 const renderBadge = (estado) => {
     switch (estado?.toLowerCase()) {
       case 'disponible':
@@ -212,6 +224,12 @@ const renderBadge = (estado) => {
                       >
                         Editar
                       </button>
+                      <button
+                        onClick={() => handleDelete(p.idPropiedad)}
+                        className="border border-red-300 dark:border-red-800/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 font-medium px-3 py-1 rounded-md text-xs transition cursor-pointer"
+                      >
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -295,7 +313,7 @@ const renderBadge = (estado) => {
                     <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Seleccione...</option>
                     {zonas.map(z => (
                       <option key={z.idZona} value={z.idZona} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                        {z.nombreBarrio}
+                        {z.zona}{z.nombreBarrio ? ` - ${z.nombreBarrio}` : ''}
                       </option>
                     ))}
                   </select>
