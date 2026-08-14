@@ -7,6 +7,8 @@ import PersonasPage from './pages/PersonasPage';
 import PropiedadesPage from './pages/PropiedadesPage';
 import ContratosPage from './pages/ContratosPage';
 import PagosPage from './pages/PagosPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import Dashboard from './components/Dashboard';
 
 function App() {
@@ -40,6 +42,9 @@ function App() {
             )
           } 
         />
+
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         
         <Route 
           path="/dashboard" 

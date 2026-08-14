@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { pagoService } from '../services/pagoService';
 import { contratoService } from '../services/contratoService';
@@ -27,6 +28,7 @@ const initialFormState = {
 };
 
 export const PagosPage = () => {
+  const navigate = useNavigate();
   const [pagos, setPagos] = useState([]);
   const [contratos, setContratos] = useState([]);
   const [loading, setLoading] = useState(true);

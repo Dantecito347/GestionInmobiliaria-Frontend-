@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import Swal from 'sweetalert2';
 import { toast } from 'sonner';
 
 export default function Login({ onLoginSuccess }) {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -78,6 +80,14 @@ return (
             className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2.5 rounded-lg transition duration-200 disabled:opacity-50 shadow-sm mt-2 cursor-pointer"
           >
             {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => navigate('/forgot-password')}
+            className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium cursor-pointer"
+          >
+            ¿Olvidaste tu contraseña?
           </button>
         </form>
       </div>
