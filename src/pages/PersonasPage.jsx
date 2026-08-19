@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { personaService } from '../services/personaService';
 import PersonaModal from '../components/PersonaModal';
@@ -14,7 +14,9 @@ import {
   User,
   Mail,
   Phone,
-  IdCard
+  IdCard,
+  Search,   
+  Loader2
 } from 'lucide-react';
 
 export default function PersonasPage() {
@@ -22,6 +24,12 @@ export default function PersonasPage() {
   const [personas, setPersonas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sugerencias, setSugerencias] = useState([]);
+  const [loadingSugerencias, setLoadingSugerencias] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -41,6 +49,39 @@ export default function PersonasPage() {
     fetchPersonas();
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (searchTerm.trim().length < 2) {
+      setSugerencias([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        setLoadingSugerencias(true);
+        const data = await personaService.getSugerencias(searchTerm);
+        setSugerencias(data);
+        setShowDropdown(true);
+      } catch (err) {
+        console.error("Error al buscar sugerencias:", err);
+      } finally {
+        setLoadingSugerencias(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
   const fetchPersonas = async () => {
     try {
       setLoading(true);
@@ -52,6 +93,19 @@ export default function PersonasPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSelectSugerencia = (personaSeleccionada) => {
+    setPersonas([personaSeleccionada]);
+    setSearchTerm(`${personaSeleccionada.nombre} ${personaSeleccionada.apellido}`);
+    setShowDropdown(false);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setSugerencias([]);
+    setShowDropdown(false);
+    fetchPersonas();
   };
 
   const handleOpenModal = (persona = null) => {
@@ -156,14 +210,13 @@ return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 font-sans transition-colors duration-200">
       <div className="max-w-7xl mx-auto space-y-6">
         
-        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
           <div>
             <button 
               onClick={() => navigate('/dashboard')}
               className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium mb-1 inline-flex items-center gap-1 cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" /> Volver al Dashboard
+              <ArrowLeft className="w-4 h-4" /> Volver al Menu
             </button>
             <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Users className="w-7 h-7 text-blue-600 dark:text-blue-400" />
@@ -180,6 +233,64 @@ return (
           >
             <Plus className="w-4 h-4" /> Nueva Persona
           </button>
+        </div>
+
+        <div className="relative" ref={dropdownRef}>
+          <div className="relative flex items-center">
+            <Search className="w-5 h-5 absolute left-3 text-slate-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={() => searchTerm.trim().length >= 2 && setShowDropdown(true)}
+              placeholder="Buscar persona por nombre, apellido o DNI..."
+              className="w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 shadow-sm transition-colors text-sm"
+            />
+            {loadingSugerencias ? (
+              <Loader2 className="w-5 h-5 absolute right-3 text-slate-400 animate-spin" />
+            ) : searchTerm ? (
+              <button
+                onClick={handleClearSearch}
+                className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            ) : null}
+          </div>
+
+          {showDropdown && (
+            <div className="absolute z-50 left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+              {sugerencias.length > 0 ? (
+                sugerencias.map((persona) => {
+                  const id = persona.idPersona || persona.id;
+                  return (
+                    <div
+                      key={id}
+                      onClick={() => handleSelectSugerencia(persona)}
+                      className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-700/60 cursor-pointer transition-colors border-b last:border-b-0 border-slate-100 dark:border-slate-700/50 flex justify-between items-center"
+                    >
+                      <div>
+                        <div className="font-semibold text-sm text-slate-800 dark:text-slate-100">
+                          {persona.nombre} {persona.apellido}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
+                          <span>{persona.tipoDocumentoDescripcion || 'Doc'}: {persona.nroDocumento}</span>
+                          {persona.email && <span>• {persona.email}</span>}
+                        </div>
+                      </div>
+                      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                        Seleccionar
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                  No se encontraron coincidencias para "{searchTerm}"
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Tabla */}

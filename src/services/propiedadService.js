@@ -24,6 +24,13 @@ export const propiedadService = {
   delete: async (id) => {
     const response = await api.delete(`/propiedades/${id}`);
     return response.data;
+  },
+
+  getSugerencias: async (termino) => {
+    const response = await api.get('/propiedades/sugerencias', {
+      params: { termino }
+    });
+    return response.data;
   }
 };
 
@@ -40,3 +47,4 @@ export const zonaService = {
     return response.data;
   }
 };
+

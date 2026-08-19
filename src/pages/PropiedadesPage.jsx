@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { propiedadService, tipoInmuebleService, zonaService } from '../services/propiedadService';
 import { personaService } from '../services/personaService';
@@ -12,15 +12,23 @@ import {
   Pencil, 
   Trash2, 
   X,
-  Home
+  Home,
+  Search,
+  Loader2
 } from 'lucide-react';
 
 export default function PropiedadesPage() {
   const navigate = useNavigate();
+  const searchRef = useRef(null);
   const [propiedades, setPropiedades] = useState([]);
   const [tiposInmueble, setTiposInmueble] = useState([]);
   const [propietarios, setPropietarios] = useState([]);
   const [zonas, setZonas] = useState([]);
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sugerencias, setSugerencias] = useState([]);
+  const [showSugerencias, setShowSugerencias] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -39,6 +47,38 @@ export default function PropiedadesPage() {
     cargarPropiedades();
     cargarDesplegables();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSugerencias(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchTerm.trim().length > 0) {
+        setIsSearching(true);
+        try {
+          const results = await propiedadService.getSugerencias(searchTerm);
+          setSugerencias(results);
+          setShowSugerencias(true);
+        } catch (err) {
+          console.error("Error al obtener sugerencias:", err);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSugerencias([]);
+        setShowSugerencias(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const cargarPropiedades = async () => {
     try {
@@ -161,6 +201,36 @@ export default function PropiedadesPage() {
     }
   };
 
+  const handleSelectSugerencia = (propiedad) => {
+    setSearchTerm(propiedad.direccion);
+    setShowSugerencias(false);            
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setSugerencias([]);
+    setShowSugerencias(false);
+  };
+
+  const propiedadesFiltradas = propiedades.filter((p) => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase().trim();
+
+    const direccion = (p.direccion || '').toLowerCase();
+    const zona = (p.zona || '').toLowerCase();
+    const barrio = (p.nombreBarrio || '').toLowerCase();
+    const tipo = (p.tipoDescripcion || '').toLowerCase();
+    const propietario = `${p.nombrePropietario || ''} ${p.apellidoPropietario || ''}`.toLowerCase();
+
+    return (
+      direccion.includes(term) ||
+      zona.includes(term) ||
+      barrio.includes(term) ||
+      tipo.includes(term) ||
+      propietario.includes(term)
+    );
+  });
+
   const renderBadge = (estado) => {
     switch (estado?.toLowerCase()) {
       case 'disponible':
@@ -203,7 +273,7 @@ export default function PropiedadesPage() {
               onClick={() => navigate('/dashboard')}
               className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium mb-2 inline-flex items-center gap-1 cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" /> Volver al Dashboard
+              <ArrowLeft className="w-4 h-4" /> Volver al Menu
             </button>
             <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Building2 className="w-7 h-7 text-blue-600 dark:text-blue-400" />
@@ -222,6 +292,69 @@ export default function PropiedadesPage() {
           </button>
         </div>
 
+        {/* BUSCADOR Y DROPDOWN CON NOMBRES CORREGIDOS */}
+        <div className="relative" ref={searchRef}>
+          <div className="relative flex items-center">
+            <Search className="w-5 h-5 absolute left-3 text-slate-400" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onFocus={() => searchTerm.trim().length >= 2 && setShowSugerencias(true)}
+              placeholder="Buscar propiedad por dirección, zona, barrio o propietario..."
+              className="w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 shadow-sm transition-colors text-sm"
+            />
+            {isSearching ? (
+              <Loader2 className="w-5 h-5 absolute right-3 text-slate-400 animate-spin" />
+            ) : searchTerm ? (
+              <button
+                onClick={handleClearSearch}
+                className="absolute right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            ) : null}
+          </div>
+
+          {showSugerencias && (
+            <div className="absolute z-50 left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto">
+              {sugerencias.length > 0 ? (
+                sugerencias.map((propiedad) => {
+                  const id = propiedad.idPropiedad || propiedad.id;
+                  return (
+                    <div
+                      key={id}
+                      onClick={() => handleSelectSugerencia(propiedad)}
+                      className="px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-700/60 cursor-pointer transition-colors border-b last:border-b-0 border-slate-100 dark:border-slate-700/50 flex justify-between items-center"
+                    >
+                      <div>
+                        <div className="font-semibold text-sm text-slate-800 dark:text-slate-100">
+                          {propiedad.direccion}
+                        </div>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-0.5">
+                          <span>{propiedad.tipoDescripcion || 'Inmueble'}</span>
+                          {propiedad.zona && <span>• {propiedad.zona} ({propiedad.nombreBarrio || 'Sin barrio'})</span>}
+                          {propiedad.nombrePropietario && (
+                            <span>• Prop: {propiedad.nombrePropietario} {propiedad.apellidoPropietario || ''}</span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                        Seleccionar
+                      </span>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                  No se encontraron coincidencias para "{searchTerm}"
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* TABLA DE PROPIEDADES USANDO propiedadesFiltradas */}
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-x-auto transition-colors">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -236,7 +369,7 @@ export default function PropiedadesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50 text-sm">
-              {propiedades.length === 0 ? (
+              {propiedadesFiltradas.length === 0 ? (
                 <tr>
                   <td colSpan="7" className="text-center py-12 text-slate-400 dark:text-slate-500">
                     <Home className="w-10 h-10 mx-auto mb-2 opacity-50" />
@@ -244,7 +377,7 @@ export default function PropiedadesPage() {
                   </td>
                 </tr>
               ) : (
-                propiedades.map((p) => (
+                propiedadesFiltradas.map((p) => (
                   <tr key={p.idPropiedad} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                     <td className="px-6 py-4 font-mono text-slate-500 dark:text-slate-400">#{p.idPropiedad}</td>
                     <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{p.direccion}</td>
