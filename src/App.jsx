@@ -9,6 +9,7 @@ import ContratosPage from './pages/ContratosPage';
 import PagosPage from './pages/PagosPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import EstadisticasPage from './pages/EstadisticasPage';
 import Dashboard from './components/Dashboard';
 
 function App() {
@@ -100,6 +101,21 @@ function App() {
             )
           } 
         />
+
+        <Route 
+  path="/estadisticas" 
+  element={
+    isAuthenticated ? (
+      user.perfil?.toUpperCase().includes('ADMIN') ? (
+        <EstadisticasPage />
+      ) : (
+        <Navigate to="/dashboard" replace />
+      )
+    ) : (
+      <Navigate to="/login" replace />
+    )
+  } 
+/>
 
         <Route 
           path="*" 

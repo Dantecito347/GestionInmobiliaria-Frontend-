@@ -6,6 +6,7 @@ export default function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
   const username = user?.username || 'admin';
   const perfil = user?.perfil || user?.nombrePerfil || 'ADMINISTRADOR';
+  const esAdmin = perfil?.toUpperCase().includes('ADMIN');
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -122,6 +123,26 @@ export default function Dashboard({ user, onLogout }) {
                 Registrar pagos &rarr;
               </span>
             </div>
+
+          {esAdmin && (
+  <div 
+    onClick={() => navigate('/estadisticas')} 
+    className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition cursor-pointer group"
+  >
+    <div className="w-12 h-12 bg-rose-100 dark:bg-rose-900/40 text-rose-600 dark:text-rose-400 rounded-lg flex items-center justify-center font-bold text-xl mb-4 group-hover:bg-rose-600 group-hover:text-white transition">
+      📈
+    </div>
+    <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-1">
+      Estadísticas y Finanzas
+    </h4>
+    <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+      Reportes de ingresos mensuales, contratos activos y métricas.
+    </p>
+    <span className="text-sm font-semibold text-rose-600 dark:text-rose-400 group-hover:underline inline-flex items-center gap-1">
+      Ver reportes &rarr;
+    </span>
+  </div>
+)}
 
           </div>
         </div>

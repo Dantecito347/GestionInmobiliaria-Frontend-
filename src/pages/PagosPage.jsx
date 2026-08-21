@@ -128,7 +128,7 @@ export const PagosPage = () => {
               onClick={() => navigate('/dashboard')}
               className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium mb-1 inline-flex items-center gap-1 cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4" /> Volver al Dashboard
+              <ArrowLeft className="w-4 h-4" /> Volver al Menu
             </button>
             <h1 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <DollarSign className="w-7 h-7 text-blue-600 dark:text-blue-400" />

@@ -292,7 +292,6 @@ export default function PropiedadesPage() {
           </button>
         </div>
 
-        {/* BUSCADOR Y DROPDOWN CON NOMBRES CORREGIDOS */}
         <div className="relative" ref={searchRef}>
           <div className="relative flex items-center">
             <Search className="w-5 h-5 absolute left-3 text-slate-400" />
@@ -354,7 +353,6 @@ export default function PropiedadesPage() {
           )}
         </div>
 
-        {/* TABLA DE PROPIEDADES USANDO propiedadesFiltradas */}
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-x-auto transition-colors">
           <table className="w-full text-left border-collapse">
             <thead>
