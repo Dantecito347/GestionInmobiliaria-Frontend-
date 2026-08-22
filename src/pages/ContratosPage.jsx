@@ -1,31 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
 import { contratoService } from '../services/contratoService';
 import { personaService } from '../services/personaService';
 import { propiedadService } from '../services/propiedadService';
 import ContratoModal from '../components/ContratoModal';
 import Swal from 'sweetalert2';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 import { 
   ArrowLeft, 
   Plus, 
-  X, 
   Pencil, 
   Trash2, 
-  FileText,         
+  FileText,
+  FileCheck,
+  Share2
 } from 'lucide-react';
-
-const initialFormState = {
-  idPropiedad: '',
-  idInquilino: '',
-  fechaInicio: '',
-  fechaFin: '',
-  valorInicial: '',
-  idAjuste: '1',
-  estado: 'Activo',
-  obligaciones: []
-};
 
 export const ContratosPage = () => {
   const navigate = useNavigate();
@@ -101,6 +91,115 @@ export const ContratosPage = () => {
         toast.error('No se pudo eliminar el contrato.');
       }
     }
+  };
+
+  // --- LÓGICA DE GENERACIÓN DE PDF Y WHATSAPP ---
+  const generarPDFContrato = (c) => {
+    const doc = new jsPDF();
+    const inquilino = c.nombreInquilino ? `${c.nombreInquilino} ${c.apellidoInquilino}` : `Inquilino ID: ${c.idInquilino}`;
+    const propiedad = c.direccionPropiedad || `Propiedad ID: ${c.idPropiedad}`;
+    const valorBase = Number(c.valorInicial) || 0;
+
+    // Encabezado principal
+    doc.setFillColor(30, 41, 59); // Fondo Slate-800
+    doc.rect(0, 0, 210, 32, 'F');
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(255, 255, 255);
+    doc.text('RESUMEN DE CONTRATO Y DETALLE DE GASTOS', 15, 20);
+
+    // Sección: Información general
+    doc.setTextColor(30, 41, 59);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('INFORMACIÓN GENERAL', 15, 45);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Inquilino: ${inquilino}`, 15, 53);
+    doc.text(`Propiedad: ${propiedad}`, 15, 60);
+    doc.text(`Estado del contrato: ${c.estado || 'Activo'}`, 15, 67);
+    doc.text(`Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}`, 15, 74);
+
+    doc.setDrawColor(226, 232, 240);
+    doc.line(15, 80, 195, 80);
+
+    // Sección: Tabla de desglose de conceptos
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('DESGLOSE DE CONCEPTOS MENSUALES', 15, 92);
+
+    let yPos = 102;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('CONCEPTO', 15, yPos);
+    doc.text('RESPONSABLE', 110, yPos);
+    doc.text('IMPORTE', 165, yPos);
+    
+    yPos += 3;
+    doc.setDrawColor(203, 213, 225);
+    doc.line(15, yPos, 195, yPos);
+    yPos += 8;
+
+    // Fila: Alquiler Base
+    doc.setFont('helvetica', 'normal');
+    doc.text('Alquiler Base', 15, yPos);
+    doc.text('Inquilino', 110, yPos);
+    doc.text(`$ ${valorBase.toLocaleString('es-AR')}`, 165, yPos);
+    
+    let totalInquilino = valorBase;
+
+    // Filas: Extras / Obligaciones
+    if (c.obligaciones && c.obligaciones.length > 0) {
+      c.obligaciones.forEach((ob) => {
+        yPos += 8;
+        const pagaInquilino = ob.pagadoPorInquilino !== undefined ? ob.pagadoPorInquilino : ob.pagado_por_inquilino;
+        const monto = Number(ob.importeReferencia !== undefined ? ob.importeReferencia : ob.importe_referencia) || 0;
+        
+        doc.text(ob.descripcion || 'Gasto Extra', 15, yPos);
+        doc.text(pagaInquilino ? 'Inquilino' : 'Propietario', 110, yPos);
+        doc.text(`$ ${monto.toLocaleString('es-AR')}`, 165, yPos);
+
+        if (pagaInquilino) {
+          totalInquilino += monto;
+        }
+      });
+    }
+
+    yPos += 12;
+    doc.setDrawColor(30, 41, 59);
+    doc.line(15, yPos, 195, yPos);
+
+    // Recuadro de Total Final a pagar por el inquilino
+    yPos += 8;
+    doc.setFillColor(241, 245, 249);
+    doc.roundedRect(15, yPos, 180, 16, 3, 3, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(15, 23, 42);
+    doc.text('TOTAL ESTIMADO A ABONAR POR INQUILINO:', 20, yPos + 10.5);
+    doc.setFontSize(12);
+    doc.setTextColor(16, 185, 129); // Verde
+    doc.text(`$ ${totalInquilino.toLocaleString('es-AR')}`, 155, yPos + 10.5);
+
+    // Descargar el PDF localmente
+    const nombreLimpio = inquilino.replace(/[^a-zA-Z0-9]/g, '_');
+    doc.save(`Contrato_${nombreLimpio}.pdf`);
+
+    return { totalInquilino, inquilino, propiedad };
+  };
+
+  const handleCompartirWhatsApp = (c) => {
+    const { totalInquilino, inquilino, propiedad } = generarPDFContrato(c);
+    
+    const mensaje = `Hola ${inquilino}, te comparto el resumen detallado de tu contrato para la propiedad *${propiedad}*.\n\n` +
+                    `*Total a abonar:* $${totalInquilino.toLocaleString('es-AR')}\n\n` +
+                    `Se ha generado y descargado el archivo PDF con el desglose de conceptos para tu control. ¡Saludos!`;
+
+    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
   };
 
   const getBadgeClass = (estado) => {
@@ -221,6 +320,13 @@ export const ContratosPage = () => {
 
                         <td className="p-4 text-right space-x-2">
                           <button
+                            onClick={() => handleCompartirWhatsApp(c)}
+                            title="Generar PDF y enviar por WhatsApp"
+                            className="border border-emerald-300 dark:border-emerald-800/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 font-medium px-3 py-1.5 rounded-md text-xs transition cursor-pointer inline-flex items-center gap-1"
+                          >
+                            <Share2 className="w-3.5 h-3.5" /> Compartir
+                          </button>
+                          <button
                             onClick={() => handleOpenEditar(c)}
                             className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium px-3 py-1.5 rounded-md text-xs transition cursor-pointer inline-flex items-center gap-1"
                           >
@@ -254,5 +360,6 @@ export const ContratosPage = () => {
       />
     </div>
   );
-}
+};
+
 export default ContratosPage;
