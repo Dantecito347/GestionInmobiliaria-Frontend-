@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -109,6 +110,22 @@ export default function EstadisticasPage() {
   const mesActualIndex = new Date().getMonth();
   const ingresosMesActual = datosGraficoMensual[mesActualIndex]?.ingresos || 0;
 
+  const handleCompartirPorEnlace = () => {
+    const baseUrl = window.location.origin; 
+    
+    const chartDataString = encodeURIComponent(JSON.stringify(datosGraficoMensual));
+
+    const urlCompartida = `${baseUrl}/reporte-compartido?ingresos=${ingresosMesActual}&contratos=${contratosActivos}&chartData=${chartDataString}`;
+    
+    const mensaje = 
+      `📊 *Reporte de Estadísticas y Finanzas*\n\n` +
+      `Podés visualizar la gráfica de proyección y el estado actual de los contratos ingresando al siguiente enlace seguro:\n\n` +
+      `${urlCompartida}\n\n` +
+      `¡Saludos!`;
+    
+    window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
@@ -137,6 +154,12 @@ export default function EstadisticasPage() {
           <p className="text-slate-400 text-sm mt-1">
             Análisis de proyección de ingresos, estado de contratos y métricas del sistema.
           </p>
+          <button
+            onClick={handleCompartirPorEnlace}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm cursor-pointer flex items-center gap-2"
+          >
+             <Share2 className="w-4 h-4" /> Compartir Reporte
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
