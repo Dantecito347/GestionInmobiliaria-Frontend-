@@ -48,7 +48,7 @@ export default function EstadisticasPage() {
     const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     const hoy = new Date();
     const currentYear = hoy.getFullYear();
-    const currentMonthIndex = hoy.getMonth(); // 0 a 11
+    const currentMonthIndex = hoy.getMonth();
 
     const datosMensuales = meses.map(mes => ({ name: mes, ingresos: 0 }));
 
@@ -74,7 +74,6 @@ export default function EstadisticasPage() {
 
         if (inicio && fin) {
           for (let mes = 0; mes <= currentMonthIndex; mes++) {
-
             const primerDiaMes = new Date(currentYear, mes, 1, 0, 0, 0);
             const ultimoDiaMes = new Date(currentYear, mes + 1, 0, 23, 59, 59);
 
@@ -112,9 +111,7 @@ export default function EstadisticasPage() {
 
   const handleCompartirPorEnlace = () => {
     const baseUrl = window.location.origin; 
-    
     const chartDataString = encodeURIComponent(JSON.stringify(datosGraficoMensual));
-
     const urlCompartida = `${baseUrl}/reporte-compartido?ingresos=${ingresosMesActual}&contratos=${contratosActivos}&chartData=${chartDataString}`;
     
     const mensaje = 
@@ -128,74 +125,81 @@ export default function EstadisticasPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <p className="text-slate-400 font-medium">Cargando métricas...</p>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center font-sans transition-colors duration-200">
+        <p className="text-slate-600 dark:text-slate-400 font-medium">Cargando métricas...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 p-6 text-slate-100">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 font-sans transition-colors duration-200">
       <main className="max-w-7xl mx-auto space-y-6">
         
-        <div className="bg-slate-800/80 backdrop-blur border border-slate-700/80 rounded-2xl p-6 shadow-lg">
+        {/* Encabezado */}
+        <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors">
           <button 
             onClick={() => navigate('/dashboard')}
-            className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1.5 transition mb-3"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium mb-3 inline-flex items-center gap-1.5 cursor-pointer"
           >
             &larr; Volver al Dashboard
           </button>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">📈</span>
-            <h1 className="text-2xl font-bold text-white">
-              Estadísticas y Finanzas
-            </h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📈</span>
+                <h1 className="text-2xl font-bold text-slate-800 dark:text-white">
+                  Estadísticas y Finanzas
+                </h1>
+              </div>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                Análisis de proyección de ingresos, estado de contratos y métricas del sistema.
+              </p>
+            </div>
+            <button
+              onClick={handleCompartirPorEnlace}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm cursor-pointer flex items-center gap-2"
+            >
+              <Share2 className="w-4 h-4" /> Compartir Reporte
+            </button>
           </div>
-          <p className="text-slate-400 text-sm mt-1">
-            Análisis de proyección de ingresos, estado de contratos y métricas del sistema.
-          </p>
-          <button
-            onClick={handleCompartirPorEnlace}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2.5 rounded-lg transition shadow-sm cursor-pointer flex items-center gap-2"
-          >
-             <Share2 className="w-4 h-4" /> Compartir Reporte
-          </button>
         </div>
 
+        {/* Tarjetas de Métricas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl shadow-sm">
-            <p className="text-sm text-slate-400 font-medium">Ingresos Proyectados (Mes Actual)</p>
-            <h3 className="text-3xl font-bold text-white mt-2">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 rounded-xl shadow-sm transition-colors">
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Ingresos Proyectados (Mes Actual)</p>
+            <h3 className="text-3xl font-bold text-slate-900 dark:text-white mt-2">
               ${ingresosMesActual.toLocaleString('es-AR')}
             </h3>
           </div>
-          <div className="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl shadow-sm">
-            <p className="text-sm text-slate-400 font-medium">Contratos Activos</p>
-            <h3 className="text-3xl font-bold text-emerald-400 mt-2">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 rounded-xl shadow-sm transition-colors">
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Contratos Activos</p>
+            <h3 className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
               {contratosActivos}
             </h3>
           </div>
-          <div className="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl shadow-sm">
-            <p className="text-sm text-slate-400 font-medium">Total de Contratos Históricos</p>
-            <h3 className="text-3xl font-bold text-blue-400 mt-2">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 rounded-xl shadow-sm transition-colors">
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Total de Contratos Históricos</p>
+            <h3 className="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">
               {totalContratos}
             </h3>
           </div>
         </div>
 
+        {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          <div className="lg:col-span-2 bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl shadow-sm h-[400px]">
-            <h4 className="text-lg font-semibold text-white mb-4">
+          <div className="lg:col-span-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 rounded-xl shadow-sm h-[400px] transition-colors">
+            <h4 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
               Proyección de Ingresos {new Date().getFullYear()}
             </h4>
             <ResponsiveContainer width="100%" height="85%">
               <BarChart data={datosGraficoMensual} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="name" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#94a3b8" opacity={0.3} vertical={false} />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val}`} />
                 <Tooltip 
-                  cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }}
+                  cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }}
                   contentStyle={{ backgroundColor: '#1e293b', borderColor: '#475569', borderRadius: '12px', color: '#fff' }}
                   formatter={(value) => [`$${value.toLocaleString('es-AR')}`, 'Ingresos']}
                 />
@@ -204,8 +208,8 @@ export default function EstadisticasPage() {
             </ResponsiveContainer>
           </div>
 
-          <div className="bg-slate-800/80 border border-slate-700/80 p-6 rounded-2xl shadow-sm h-[400px] flex flex-col">
-            <h4 className="text-lg font-semibold text-white mb-4">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-6 rounded-xl shadow-sm h-[400px] flex flex-col transition-colors">
+            <h4 className="text-lg font-semibold text-slate-800 dark:text-white mb-4">
               Estado de Contratos
             </h4>
             <div className="flex-1 min-h-0">

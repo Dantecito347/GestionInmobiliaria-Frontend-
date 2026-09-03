@@ -1,5 +1,20 @@
 import api from '../api/axios';
 
+const crearFormData = (propiedadData, imagenArchivo) => {
+  const formData = new FormData();
+
+  formData.append(
+    'propiedad',
+    new Blob([JSON.stringify(propiedadData)], { type: 'application/json' })
+  );
+
+  if (imagenArchivo) {
+    formData.append('imagen', imagenArchivo);
+  }
+
+  return formData;
+};
+
 export const propiedadService = {
   getAll: async () => {
     const response = await api.get('/propiedades');
@@ -11,13 +26,23 @@ export const propiedadService = {
     return response.data;
   },
 
-  create: async (propiedadData) => {
-    const response = await api.post('/propiedades', propiedadData);
+  create: async (propiedadData, imagenArchivo) => {
+    const formData = crearFormData(propiedadData, imagenArchivo);
+    const response = await api.post('/propiedades', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return response.data;
   },
 
-  update: async (id, propiedadData) => {
-    const response = await api.put(`/propiedades/${id}`, propiedadData);
+  update: async (id, propiedadData, imagenArchivo) => {
+    const formData = crearFormData(propiedadData, imagenArchivo);
+    const response = await api.put(`/propiedades/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
     return response.data;
   },
 

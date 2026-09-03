@@ -1,5 +1,5 @@
-import React from 'react';
 import { X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
 export default function PropiedadModal({
   modalOpen,
@@ -7,19 +7,48 @@ export default function PropiedadModal({
   editingId,
   formData,
   handleChange,
+  handleFileChange,
   handleSubmit,
   propietarios,
   tiposInmueble,
   zonas
 }) {
+  const [preview, setPreview] = useState(null);
+
+  useEffect(() => {
+    if (!modalOpen) {
+      setPreview(null);
+    }
+  }, [modalOpen]);
+
   if (!modalOpen) return null;
+
+  const getImagenUrl = (imagen) => {
+    if (!imagen) return null;
+    if (imagen.startsWith('http://') || imagen.startsWith('https://')) return imagen;
+    const pathLimpio = imagen.startsWith('/') ? imagen : `/${imagen}`;
+    return `http://localhost:8080${pathLimpio}`;
+  };
+
+  const onFileSelect = (e) => {
+    handleFileChange(e);
+    const file = e.target.files[0];
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    } else {
+      setPreview(null);
+    }
+  };
+
+  const fotoActualUrl = preview || getImagenUrl(formData.imagen);
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700 space-y-4 animate-in fade-in zoom-in duration-200 relative">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-full max-w-lg p-6 border border-slate-200 dark:border-slate-700 space-y-4 animate-in fade-in zoom-in duration-200 relative max-h-[90vh] overflow-y-auto">
         
         <button 
           onClick={handleCloseModal}
+          type="button"
           className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
         >
           <X className="w-5 h-5" />
@@ -123,6 +152,42 @@ export default function PropiedadModal({
                 <option value="Reservada">Reservada</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+              Imagen de la Propiedad
+            </label>
+
+            {fotoActualUrl && (
+              <div className="relative w-full h-48 rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 mb-3 bg-slate-100 dark:bg-slate-900 group shadow-sm">
+                <img
+                  src={fotoActualUrl}
+                  alt="Vista previa de la propiedad"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    e.target.parentElement.style.display = 'none';
+                  }}
+                />
+                <span className="absolute top-2.5 left-2.5 bg-slate-900/80 text-white text-[11px] font-medium px-2.5 py-1 rounded-md backdrop-blur-md shadow-sm">
+                  {preview ? 'Nueva imagen seleccionada' : 'Imagen cargada actualmente'}
+                </span>
+              </div>
+            )}
+
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onFileSelect}
+              className="w-full text-sm text-slate-500 dark:text-slate-400
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-lg file:border-0
+                file:text-xs file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100
+                dark:file:bg-slate-700 dark:file:text-blue-400
+                cursor-pointer border border-slate-300 dark:border-slate-600 rounded-lg p-1 bg-white dark:bg-slate-900"
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">

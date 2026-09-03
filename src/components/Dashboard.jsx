@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import { useNotificationContext } from '../context/NotificationContext';
+import { NotificationBell } from '../components/NotificationBell';
+import { NotificationToast } from './NotificationToast';
 
 export default function Dashboard({ user, onLogout }) {
   const navigate = useNavigate();
@@ -8,6 +11,7 @@ export default function Dashboard({ user, onLogout }) {
   const perfil = user?.perfil || user?.nombrePerfil || 'ADMINISTRADOR';
   const esAdmin = perfil?.toUpperCase().includes('ADMIN');
   const { theme, toggleTheme } = useTheme();
+  const { notifications, unreadCount, markAsRead, toast, clearToast } = useNotificationContext();
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col transition-colors duration-200">
@@ -25,6 +29,12 @@ export default function Dashboard({ user, onLogout }) {
         </div>
 
         <div className="flex items-center gap-4">
+          <NotificationBell 
+            notifications={notifications} 
+            unreadCount={unreadCount} 
+            onMarkAsRead={markAsRead} 
+          />
+
           <button
             onClick={toggleTheme}
             className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors cursor-pointer"
@@ -146,8 +156,8 @@ export default function Dashboard({ user, onLogout }) {
 
           </div>
         </div>
-
       </main>
+      <NotificationToast toast={toast} onClose={clearToast} />
     </div>
   );
 }

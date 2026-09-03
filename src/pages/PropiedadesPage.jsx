@@ -14,7 +14,8 @@ import {
   X,
   Home,
   Search,
-  Loader2
+  Loader2,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export default function PropiedadesPage() {
@@ -32,6 +33,8 @@ export default function PropiedadesPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  
+  const [imagenFile, setImagenFile] = useState(null);
 
   const initialFormState = {
     direccion: '',
@@ -108,31 +111,42 @@ export default function PropiedadesPage() {
   };
 
   const handleOpenModal = (propiedad = null) => {
-    if (propiedad) {
-      setEditingId(propiedad.idPropiedad);
-      setFormData({
-        direccion: propiedad.direccion || '',
-        idPropietario: propiedad.idPropietario || '',
-        idTipo: propiedad.idTipo || '',
-        idZona: propiedad.idZona || '',
-        estado: propiedad.estado || 'Disponible'
-      });
-    } else {
-      setEditingId(null);
-      setFormData(initialFormState);
-    }
-    setModalOpen(true);
-  };
+  if (propiedad) {
+    setEditingId(propiedad.idPropiedad);
+    setFormData({
+      direccion: propiedad.direccion || '',
+      idPropietario: propiedad.idPropietario || '',
+      idTipo: propiedad.idTipo || '',
+      idZona: propiedad.idZona || '',
+      estado: propiedad.estado || 'Disponible',
+      imagen: propiedad.imagen || propiedad.imagenUrl || ''
+    });
+  } else {
+    setEditingId(null);
+    setFormData(initialFormState);
+  }
+  setImagenFile(null);
+  setModalOpen(true);
+};
 
   const handleCloseModal = () => {
     setModalOpen(false);
     setFormData(initialFormState);
     setEditingId(null);
+    setImagenFile(null);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setImagenFile(e.target.files[0]);
+    } else {
+      setImagenFile(null);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -153,10 +167,10 @@ export default function PropiedadesPage() {
 
     try {
       if (editingId) {
-        await propiedadService.update(editingId, payload);
+        await propiedadService.update(editingId, payload, imagenFile);
         toast.success('Propiedad actualizada correctamente');
       } else {
-        await propiedadService.create(payload);
+        await propiedadService.create(payload, imagenFile);
         toast.success('Propiedad registrada con éxito');
       }
       cargarPropiedades();
@@ -263,6 +277,13 @@ export default function PropiedadesPage() {
     }
   };
 
+ const getImagenUrl = (imagen) => {
+  if (!imagen) return null;
+  if (imagen.startsWith('http://') || imagen.startsWith('https://')) return imagen;
+  const pathLimpio = imagen.startsWith('/') ? imagen : `/${imagen}`;
+  return `http://localhost:8080${pathLimpio}`;
+};
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 font-sans transition-colors duration-200">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -358,6 +379,7 @@ export default function PropiedadesPage() {
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 text-xs uppercase tracking-wider text-slate-600 dark:text-slate-300 font-semibold">
                 <th className="px-6 py-4">ID</th>
+                <th className="px-6 py-4">Imagen</th>
                 <th className="px-6 py-4">Dirección</th>
                 <th className="px-6 py-4">Propietario</th>
                 <th className="px-6 py-4">Tipo Inmueble</th>
@@ -369,47 +391,65 @@ export default function PropiedadesPage() {
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700/50 text-sm">
               {propiedadesFiltradas.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-12 text-slate-400 dark:text-slate-500">
+                  <td colSpan="8" className="text-center py-12 text-slate-400 dark:text-slate-500">
                     <Home className="w-10 h-10 mx-auto mb-2 opacity-50" />
                     No hay propiedades registradas
                   </td>
                 </tr>
               ) : (
-                propiedadesFiltradas.map((p) => (
-                  <tr key={p.idPropiedad} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                    <td className="px-6 py-4 font-mono text-slate-500 dark:text-slate-400">#{p.idPropiedad}</td>
-                    <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{p.direccion}</td>
-                    
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                      {p.nombrePropietario ? `${p.nombrePropietario} ${p.apellidoPropietario || ''}` : p.idPropietario}
-                    </td>
-                    
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                      {p.tipoDescripcion || p.idTipo}
-                    </td>
-                    
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                      {p.zona || p.idZona}
-                    </td>
-                    
-                    <td className="px-6 py-4">{renderBadge(p.estado)}</td>
-                    
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleOpenModal(p)}
-                        className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium px-3 py-1.5 rounded-md text-xs transition cursor-pointer inline-flex items-center gap-1"
-                      >
-                        <Pencil className="w-3.5 h-3.5" /> Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(p.idPropiedad)}
-                        className="border border-red-300 dark:border-red-800/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 font-medium px-3 py-1.5 rounded-md text-xs transition cursor-pointer inline-flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                propiedadesFiltradas.map((p) => {
+                  const urlFoto = getImagenUrl(p.imagen || p.imagenUrl);
+                  return (
+                    <tr key={p.idPropiedad} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
+                      <td className="px-6 py-4 font-mono text-slate-500 dark:text-slate-400">#{p.idPropiedad}</td>
+                      
+                      <td className="px-6 py-4">
+                        {urlFoto ? (
+                          <img
+                            src={urlFoto}
+                            alt={p.direccion}
+                            className="w-12 h-12 object-cover rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                            <ImageIcon className="w-5 h-5" />
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">{p.direccion}</td>
+                      
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                        {p.nombrePropietario ? `${p.nombrePropietario} ${p.apellidoPropietario || ''}` : p.idPropietario}
+                      </td>
+                      
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                        {p.tipoDescripcion || p.idTipo}
+                      </td>
+                      
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                        {p.zona || p.idZona}
+                      </td>
+                      
+                      <td className="px-6 py-4">{renderBadge(p.estado)}</td>
+                      
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <button
+                          onClick={() => handleOpenModal(p)}
+                          className="border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-medium px-3 py-1.5 rounded-md text-xs transition cursor-pointer inline-flex items-center gap-1"
+                        >
+                          <Pencil className="w-3.5 h-3.5" /> Editar
+                        </button>
+                        <button
+                          onClick={() => handleDelete(p.idPropiedad)}
+                          className="border border-red-300 dark:border-red-800/60 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 font-medium px-3 py-1.5 rounded-md text-xs transition cursor-pointer inline-flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -423,6 +463,7 @@ export default function PropiedadesPage() {
         editingId={editingId}
         formData={formData}
         handleChange={handleChange}
+        handleFileChange={handleFileChange}
         handleSubmit={handleSubmit}
         propietarios={propietarios}
         tiposInmueble={tiposInmueble}
